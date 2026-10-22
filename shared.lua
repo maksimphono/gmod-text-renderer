@@ -54,27 +54,29 @@ function spawnCube(pos, angle)
 end
 
 function getTextDirectionVector(eyeTrace)
-	return Vector(-eyeTrace.y, eyeTrace.x, 0):GetNormalized()
+	return Vector(eyeTrace.y, -eyeTrace.x, 0):GetNormalized() * CUBE_SIZE
 end
 
 function renderText(pos, text, eyeTrace, angle)
-	local dirVec = -getTextDirectionVector(eyeTrace)
-	local verticalVector = Vector(0, 0, -1)
+	local dirVec = getTextDirectionVector(eyeTrace)
+	local verticalVector = Vector(0, 0, -CUBE_SIZE)
 	local textHeight = 0
+	local textWidth = 0
 
 	for sym in string.gmatch(text, ".") do
 		if symbols_table[sym].height > textHeight then textHeight = symbols_table[sym].height end
+		textWidth += symbols_table[sym].width
 	end
 
-	local symStartPos = pos + dirVec * CUBE_SIZE * 2
+	local symStartPos = pos - dirVec * textWidth + dirVec * 2 - verticalVector
 	for sym in string.gmatch(text, ".") do
 
 		local repr = symbols_table[sym]
 
 		for i, coords in ipairs(repr.bitmap) do
-			spawnCube(symStartPos + dirVec * coords[1] * CUBE_SIZE + verticalVector * coords[2] * CUBE_SIZE, angle)
+			spawnCube(symStartPos + dirVec * coords[1] + verticalVector * coords[2], angle)
 		end
-		symStartPos = symStartPos + dirVec * (repr.width + 1) * CUBE_SIZE
+		symStartPos = symStartPos + dirVec * repr.width
 
 	end
 	
