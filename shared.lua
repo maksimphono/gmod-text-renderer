@@ -79,18 +79,26 @@ function renderText(pos, text, eyeTrace, angle, anchor)
 	end
 
 	local symStartPos = pos - dirVec * (textWidth / 2) - verticalVector * textHeight
-	local prevCube = nil
 	for sym in string.gmatch(text, ".") do
 		
 		local repr = symbols_table[sym]
+		local cubes = {}
 
+		-- Spawning and placing cubes
 		for i, coords in ipairs(repr.bitmap) do
 			local cube = spawnCube(symStartPos + dirVec * coords[1] + verticalVector * coords[2], angle)
 			setCubeName(cube, sym, text)
-			if prevCube != nil then constraint.Weld(prevCube, cube, 0, 0, 0, true, false) end
-			constraint.Weld(anchor, cube, 0, 0, 0, true, false)
-			prevCube = cube
+			table.insert(cubes, 1, cube)
 		end
+
+		-- Welding cubes to anchor and disabling collision
+		for i = 1,#cubes,1 do
+			for j = i + 1,#cubes,1 do
+				constraint.NoCollide(cubes[i], cubes[j], 0, 0)
+			end
+			constraint.Weld(anchor, cubes[i], 0, 0, 0, true, false)
+		end
+		-- Moving to the next symbol
 		symStartPos = symStartPos + dirVec * repr.width
 
 	end
@@ -122,7 +130,7 @@ function ENT:Initialize()
 		faceAngle = getFaceAngle(eyeTraceVec)
 		self:SetAngles(faceAngle)
 
-		renderText(pos, "qwerty", eyeTraceVec, faceAngle, self)
+		renderText(pos, "I love You", eyeTraceVec, faceAngle, self)
 	end
 
     local phys = self:GetPhysicsObject()
