@@ -5,6 +5,7 @@ CUBE_SIZE = 11.85
 CUBE_MODEL = "models/hunter/blocks/cube025x025x025.mdl"
 CUBE_NAME_FORMAT = "rt:%s:%s:cube:%f,%f,%f"
 TEXT_CUBES_FINDING_PATTERN = "rt:NAME:%a:cube:.*"
+ANCHOR_MODEL = "models/hunter/plates/plate025x025.mdl"
 
 DEFAULT_TEXT_NAME = "justtext"
 DEFAULT_TEXT = "I love You"
@@ -29,26 +30,6 @@ ENT.Spawnable = true
 ENT.Category = "Other"
 
 
--- These are custom entity variables, feel free to change them!
-ENT.ExplosionDamage = 100
-ENT.ExplosionRadius = 250
-
--- This custom variable prevents the entity from infinitely exploding.
-ENT.HasExploded = false
-
-function getFaceAngle(eyeTraceVec)
-	-- Gets angle so created object would face the player by Ox and Oy, not Oz
-	local OxyProj = eyeTraceVec
-	OxyProj.z = 0
-	local n = Vector(0, 1, 0)
-	local dir = vecMul(Vector(1, 0, 0), OxyProj)
-	local OyAngleDeg = 0
-
-	OyAngleDeg = (dir < 0 and 1 or -1) * 180 / math.pi * math.acos( vecMul(n, OxyProj) / vecLen(OxyProj) )
-
-	return Angle(0, OyAngleDeg, 90)
-end
-
 function setCubeName(cube, letter, name)
 	local pos = cube:GetPos()
 	cube:SetName(string.format(CUBE_NAME_FORMAT, name, letter, pos.x, pos.y, pos.z))
@@ -65,6 +46,19 @@ function spawnCube(pos, angle)
 	cube:GetPhysicsObject():Wake()
 
 	return cube
+end
+
+function getFaceAngle(eyeTraceVec)
+	-- Gets angle so created object would face the player by Ox and Oy, not Oz
+	local OxyProj = eyeTraceVec
+	OxyProj.z = 0
+	local n = Vector(0, 1, 0)
+	local dir = vecMul(Vector(1, 0, 0), OxyProj)
+	local OyAngleDeg = 0
+
+	OyAngleDeg = (dir < 0 and 1 or -1) * 180 / math.pi * math.acos( vecMul(n, OxyProj) / vecLen(OxyProj) )
+
+	return Angle(0, OyAngleDeg, 90)
 end
 
 function getTextDirectionVector(eyeTrace)
@@ -109,18 +103,10 @@ function renderText(pos, text, name, eyeTrace, angle, anchor)
 	
 end
 
-function removeText(name)
-	local pattern = TEXT_CUBES_FINDING_PATTERN:gsub("NAME", name)
-	for i, ent in ipairs(ents.GetAll()) do
-		if string.match(ent:GetName(), pattern) or ent:GetName() == name then
-			ent:Remove()
-		end
-	end
-end
 
 -- This code runs whenever the entity is created.
 function ENT:Initialize()
-	local model = "models/hunter/plates/plate025x025.mdl"
+	local model = ANCHOR_MODEL
 	local ply = Entity(1)
 
 	local hitPos = ply:GetEyeTrace().HitPos
@@ -128,8 +114,6 @@ function ENT:Initialize()
 	local eyeTraceVec = ply:GetEyeTrace().Normal
 
 	local pos = startPos + eyeTraceVec * (distance(startPos, hitPos) / 2) + Vector(0,0,1) * CUBE_SIZE * 5
-
-	local faceAngle = nil
 
 	self:SetModel(model)
 
@@ -148,7 +132,7 @@ function ENT:Initialize()
 		self:SetPos(pos)
 		self:SetName(name)
 
-		faceAngle = getFaceAngle(eyeTraceVec)
+		local faceAngle = getFaceAngle(eyeTraceVec)
 		self:SetAngles(faceAngle)
 
 		renderText(pos, text, name, eyeTraceVec, faceAngle, self)
