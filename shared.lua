@@ -1,3 +1,4 @@
+include("assets/symbols_table.lua")
 include("vector.lua")
 
 CUBE_SIZE = 11.85
@@ -45,7 +46,7 @@ function getFaceAngle(eyeTraceVec)
 end
 
 function setCubeName(cube, letter, text)
-	local pos = cobe:GetPos()
+	local pos = cube:GetPos()
 	cube:SetName(string.format(CUBE_NAME_FORMAT, string.sub(text, 1, 9), letter, pos.x, pos.y, pos.z))
 end
 
@@ -56,7 +57,8 @@ function spawnCube(pos, angle)
 	cube:SetPos(pos)
 	cube:SetAngles(angle)
 	cube:Spawn()
-	cube:GetPhysicsObject():EnableMotion(false)
+	cube:GetPhysicsObject():EnableMotion(true)
+	cube:GetPhysicsObject():Wake()
 
 	return cube
 end
@@ -77,6 +79,7 @@ function renderText(pos, text, eyeTrace, angle, anchor)
 	end
 
 	local symStartPos = pos - dirVec * (textWidth / 2) - verticalVector * textHeight
+	local prevCube = nil
 	for sym in string.gmatch(text, ".") do
 		
 		local repr = symbols_table[sym]
@@ -84,7 +87,9 @@ function renderText(pos, text, eyeTrace, angle, anchor)
 		for i, coords in ipairs(repr.bitmap) do
 			local cube = spawnCube(symStartPos + dirVec * coords[1] + verticalVector * coords[2], angle)
 			setCubeName(cube, sym, text)
+			if prevCube != nil then constraint.Weld(prevCube, cube, 0, 0, 0, true, false) end
 			constraint.Weld(anchor, cube, 0, 0, 0, true, false)
+			prevCube = cube
 		end
 		symStartPos = symStartPos + dirVec * repr.width
 
@@ -101,7 +106,7 @@ function ENT:Initialize()
 	local startPos = ply:GetPos()
 	local eyeTraceVec = ply:GetEyeTrace().Normal
 
-	local pos = startPos + eyeTraceVec * (distance(startPos, hitPos) / 2)
+	local pos = startPos + eyeTraceVec * (distance(startPos, hitPos) / 2) + Vector(0,0,1) * CUBE_SIZE * 5
 
 	local faceAngle = nil
 
