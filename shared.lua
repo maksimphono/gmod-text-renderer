@@ -53,7 +53,8 @@ end
 
 function renderText(pos, text)
 
-	for i, sym in ipairs(text) do
+	for sym in string.gmatch(text, ".") do
+		
 		repr = symbols_table[sym]
 
 		for j = 0,repr.height-1,1 do
@@ -75,12 +76,12 @@ function ENT:Initialize()
 
 	local pos = startPos + eyeTraceVec * (distance(startPos, hitPos) / 2)
 
-	renderText(pos, "Q")
-
 	self:SetModel(name)
 
 	-- Only set up physics on the server since it tends to create weird issues if you do it on the client.
 	if SERVER then
+		renderText(pos, "Q")
+
     	self:PhysicsInit(SOLID_VPHYSICS)
     	self:SetMoveType(MOVETYPE_VPHYSICS)
     	self:SetSolid(SOLID_VPHYSICS)
