@@ -3,8 +3,8 @@ include("vector.lua")
 
 CUBE_SIZE = 11.85
 CUBE_MODEL = "models/hunter/blocks/cube025x025x025.mdl"
-CUBE_NAME_FORMAT = "rt:%s:%s:cube:%f-%f-%f"
-TEXT_CUBES_FINDING_PATTERN = "rt:NAME:%a:cube:%d+%.?%d*-%d+%.?%d*-%d+%.?%d*"
+CUBE_NAME_FORMAT = "rt:%s:%s:cube:%f,%f,%f"
+TEXT_CUBES_FINDING_PATTERN = "rt:NAME:%a:cube:.*"
 
 AddCSLuaFile()
 
@@ -108,9 +108,8 @@ end
 
 function removeText(name)
 	local pattern = TEXT_CUBES_FINDING_PATTERN:gsub("NAME", name)
-	for ent in ents.GetAll() do
-		if string.match(ent.GetName(), pattern) then
-			print("Removing " .. ent.GetName())
+	for i, ent in ipairs(ents.GetAll()) do
+		if string.match(ent:GetName(), pattern) then
 			ent:Remove()
 		end
 	end
@@ -118,7 +117,8 @@ end
 
 -- This code runs whenever the entity is created.
 function ENT:Initialize()
-	local name = "models/hunter/plates/plate025x025.mdl"
+	local model = "models/hunter/plates/plate025x025.mdl"
+	local name = "qE"
 	local ply = Entity(1)
 
 	local hitPos = ply:GetEyeTrace().HitPos
@@ -129,7 +129,7 @@ function ENT:Initialize()
 
 	local faceAngle = nil
 
-	self:SetModel(name)
+	self:SetModel(model)
 
 	-- Only set up physics on the server since it tends to create weird issues if you do it on the client.
 	if SERVER then
@@ -137,11 +137,12 @@ function ENT:Initialize()
     	self:SetMoveType(MOVETYPE_VPHYSICS)
     	self:SetSolid(SOLID_VPHYSICS)
 		self:SetPos(pos)
+		self:SetName(name)
 
 		faceAngle = getFaceAngle(eyeTraceVec)
 		self:SetAngles(faceAngle)
 
-		renderText(pos, "I love You", "1", eyeTraceVec, faceAngle, self)
+		renderText(pos, "I love You", name, eyeTraceVec, faceAngle, self)
 	end
 
     local phys = self:GetPhysicsObject()
@@ -154,11 +155,12 @@ function ENT:Initialize()
 
     -- This is required to allow the entity to be gibbed.
     if ( SERVER ) then self:PrecacheGibs() end
+	
 end
 
 function ENT:OnRemove()
     if ( SERVER ) then
-        print("Removed")
-		removeText("1")
+        removeText(self:GetName())
+	print("Removed")
     end
 end
