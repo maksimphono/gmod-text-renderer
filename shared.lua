@@ -65,10 +65,10 @@ function renderText(pos, text, eyeTrace, angle)
 
 	for sym in string.gmatch(text, ".") do
 		if symbols_table[sym].height > textHeight then textHeight = symbols_table[sym].height end
-		textWidth += symbols_table[sym].width
+		textWidth = textWidth + symbols_table[sym].width
 	end
 
-	local symStartPos = pos - dirVec * textWidth + dirVec * 2 - verticalVector
+	local symStartPos = pos - dirVec * (textWidth / 2) - verticalVector * textHeight
 	for sym in string.gmatch(text, ".") do
 
 		local repr = symbols_table[sym]
