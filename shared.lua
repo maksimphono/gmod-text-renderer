@@ -112,7 +112,7 @@ end
 function removeText(name)
 	local pattern = TEXT_CUBES_FINDING_PATTERN:gsub("NAME", name)
 	for i, ent in ipairs(ents.GetAll()) do
-		if string.match(ent:GetName(), pattern) then
+		if string.match(ent:GetName(), pattern) or ent:GetName() == name then
 			ent:Remove()
 		end
 	end
@@ -121,8 +121,6 @@ end
 -- This code runs whenever the entity is created.
 function ENT:Initialize()
 	local model = "models/hunter/plates/plate025x025.mdl"
-	local name = self.SpawnArgument.name or DEFAULT_TEXT_NAME
-	local text = self.SpawnArgument.text or DEFAULT_TEXT
 	local ply = Entity(1)
 
 	local hitPos = ply:GetEyeTrace().HitPos
@@ -137,9 +135,12 @@ function ENT:Initialize()
 
 	-- Only set up physics on the server since it tends to create weird issues if you do it on the client.
 	if SERVER then
-    	self:PhysicsInit(SOLID_VPHYSICS)
-    	self:SetMoveType(MOVETYPE_VPHYSICS)
-    	self:SetSolid(SOLID_VPHYSICS)
+		local name = self.SpawnArgument.name or DEFAULT_TEXT_NAME
+		local text = self.SpawnArgument.text or DEFAULT_TEXT
+
+    		self:PhysicsInit(SOLID_VPHYSICS)
+    		self:SetMoveType(MOVETYPE_VPHYSICS)
+    		self:SetSolid(SOLID_VPHYSICS)
 		self:SetPos(pos)
 		self:SetName(name)
 
@@ -163,7 +164,6 @@ end
 
 function ENT:OnRemove()
     if ( SERVER ) then
-        removeText(self:GetName())
-		print("Removed")
+	print("Removed")
     end
 end
