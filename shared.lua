@@ -43,23 +43,39 @@ function getFaceAngle(eyeTraceVec)
 	return Angle(0, OyAngleDeg, 90)
 end
 
-function spawnCube(pos)
+function spawnCube(pos, angle)
 	local cube = ents.Create("prop_physics")
 
 	cube:SetModel(CUBE_MODEL)
 	cube:SetPos(pos)
+	cube:SetAngles(angle)
 	cube:Spawn()
+	cube:GetPhysicsObject():EnableMotion(false)
 end
 
-function renderText(pos, text)
+function getTextDirectionVector(eyeTrace)
+	return Vector(-eyeTrace.y, eyeTrace.x, 0).Normal
+end
+
+function renderText(pos, text, eyeTrace, angle)
+	dirVec = getTextDirectionVector(eyeTrace)
+	verticalVector = Vector(0, 0, -1)
+	textHeight = 0
 
 	for sym in string.gmatch(text, ".") do
-		
+		if symbols_table[sym].height > textHeight then textHeight = symbols_table[sym].height end
+	end
+
+	symStartPos = pos
+	for sym in string.gmatch(text, ".") do
+
 		repr = symbols_table[sym]
 
-		for j = 0,repr.height-1,1 do
-			spawnCube(pos + Vector(0,0,CUBE_SIZE) * i)
+		for i, coords in ipairs() do
+			spawnCube(symStartPos + dirVec * coords[0] * CUBE_SIZE + verticalVector * coords[1] * CUBE_SIZE, angle)
 		end
+		symStartPos = symStartPos + (dirVec * repr.width + 1) * CUBE_SIZE
+
 		break
 	end
 	
@@ -80,8 +96,6 @@ function ENT:Initialize()
 
 	-- Only set up physics on the server since it tends to create weird issues if you do it on the client.
 	if SERVER then
-		renderText(pos, "Q")
-
     	self:PhysicsInit(SOLID_VPHYSICS)
     	self:SetMoveType(MOVETYPE_VPHYSICS)
     	self:SetSolid(SOLID_VPHYSICS)
@@ -89,6 +103,8 @@ function ENT:Initialize()
 
 		local faceAngle = getFaceAngle(eyeTraceVec)
 		self:SetAngles(faceAngle)
+
+		renderText(pos, "Q", eyeTraceVec, faceAngle)
 	end
 
     local phys = self:GetPhysicsObject()
