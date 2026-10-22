@@ -1,0 +1,6 @@
+{
+	"name" : "Gmod figlet",
+	"description" : "Simple gmod addon that renders text using cubes in gmod",
+	"author" : "maksimphono",
+	"version" : "1.0"
+}

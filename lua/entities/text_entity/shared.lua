@@ -135,8 +135,12 @@ function ENT:Initialize()
 
 	-- Only set up physics on the server since it tends to create weird issues if you do it on the client.
 	if SERVER then
-		local name = self.SpawnArgument.name or DEFAULT_TEXT_NAME
-		local text = self.SpawnArgument.text or DEFAULT_TEXT
+		local name = DEFAULT_TEXT_NAME
+		local text = DEFAULT_TEXT
+		if self.SpawnArgument then
+			name = self.SpawnArgument.name or DEFAULT_TEXT_NAME
+			text = self.SpawnArgument.text or DEFAULT_TEXT
+		end
 
     		self:PhysicsInit(SOLID_VPHYSICS)
     		self:SetMoveType(MOVETYPE_VPHYSICS)
