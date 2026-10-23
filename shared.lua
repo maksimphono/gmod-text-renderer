@@ -3,7 +3,8 @@ include("vector.lua")
 
 CUBE_SIZE = 11.85
 CUBE_MODEL = "models/hunter/blocks/cube025x025x025.mdl"
-CUBE_NAME_FORMAT = "rt:%s:%s:cube:%f.%f.%f"
+CUBE_NAME_FORMAT = "rt:%s:%s:cube:%f-%f-%f"
+TEXT_CUBES_FINDING_PATTERN = "rt:NAME:%a:cube:%d+%.?%d*-%d+%.?%d*-%d+%.?%d*"
 
 AddCSLuaFile()
 
@@ -45,9 +46,9 @@ function getFaceAngle(eyeTraceVec)
 	return Angle(0, OyAngleDeg, 90)
 end
 
-function setCubeName(cube, letter, text)
+function setCubeName(cube, letter, name)
 	local pos = cube:GetPos()
-	cube:SetName(string.format(CUBE_NAME_FORMAT, string.sub(text, 1, 9), letter, pos.x, pos.y, pos.z))
+	cube:SetName(string.format(CUBE_NAME_FORMAT, name, letter, pos.x, pos.y, pos.z))
 end
 
 function spawnCube(pos, angle)
@@ -67,7 +68,7 @@ function getTextDirectionVector(eyeTrace)
 	return Vector(eyeTrace.y, -eyeTrace.x, 0):GetNormalized() * CUBE_SIZE
 end
 
-function renderText(pos, text, eyeTrace, angle, anchor)
+function renderText(pos, text, name, eyeTrace, angle, anchor)
 	local dirVec = getTextDirectionVector(eyeTrace)
 	local verticalVector = Vector(0, 0, -CUBE_SIZE)
 	local textHeight = 0
@@ -87,7 +88,7 @@ function renderText(pos, text, eyeTrace, angle, anchor)
 		-- Spawning and placing cubes
 		for i, coords in ipairs(repr.bitmap) do
 			local cube = spawnCube(symStartPos + dirVec * coords[1] + verticalVector * coords[2], angle)
-			setCubeName(cube, sym, text)
+			setCubeName(cube, sym, name)
 			table.insert(cubes, 1, cube)
 		end
 
@@ -103,6 +104,16 @@ function renderText(pos, text, eyeTrace, angle, anchor)
 
 	end
 	
+end
+
+function removeText(name)
+	local pattern = TEXT_CUBES_FINDING_PATTERN:gsub("NAME", name)
+	for ent in ents.GetAll() do
+		if string.match(ent.GetName(), pattern) then
+			print("Removing " .. ent.GetName())
+			ent:Remove()
+		end
+	end
 end
 
 -- This code runs whenever the entity is created.
@@ -130,7 +141,7 @@ function ENT:Initialize()
 		faceAngle = getFaceAngle(eyeTraceVec)
 		self:SetAngles(faceAngle)
 
-		renderText(pos, "I love You", eyeTraceVec, faceAngle, self)
+		renderText(pos, "I love You", "1", eyeTraceVec, faceAngle, self)
 	end
 
     local phys = self:GetPhysicsObject()
@@ -148,5 +159,6 @@ end
 function ENT:OnRemove()
     if ( SERVER ) then
         print("Removed")
+		removeText("1")
     end
 end
