@@ -1,23 +1,28 @@
 include("assets/symbols_table.lua")
 include("vector.lua")
 
-CUBE_PARAMETERS = {
-	["1"] = { ["size"] = 11.85, ["model"] = "models/hunter/blocks/cube025x025x025.mdl" },
-	["2"] = { ["size"] = 11.85 * 2, ["model"] = "models/hunter/blocks/cube05x05x05.mdl" },
-	["3"] = { ["size"] = 11.85 * 3, ["model"] = "models/hunter/blocks/cube075x075x075.mdl" },
-	["4"] = { ["size"] = 11.85 * 4, ["model"] = "models/hunter/blocks/cube1x1x1.mdl" },
-	["8"] = { ["size"] = 11.85 * 8, ["model"] = "models/hunter/blocks/cube2x2x2.mdl" },
-	["16"] = { ["size"] = 11.85 * 16, ["model"] = "models/hunter/blocks/cube4x4x4.mdl" },
-	["24"] = { ["size"] = 11.85 * 24, ["model"] = "models/hunter/blocks/cube6x6x6.mdl" },
-	["32"] = { ["size"] = 11.85 * 32, ["model"] = "models/hunter/blocks/cube8x8x8.mdl" }
-}
+local cos = math.cos
+local sin = math.sin
 
-DEFAULT_ARG_SIZE = "1"
 cubeSize = 11.85
 cubeModel = "models/hunter/blocks/cube025x025x025.mdl"
+
+CUBE_PARAMETERS = {
+	["1"] = { ["size"] = cubeSize, ["model"] = "models/hunter/blocks/cube025x025x025.mdl" },
+	["2"] = { ["size"] = cubeSize * 2, ["model"] = "models/hunter/blocks/cube05x05x05.mdl" },
+	["3"] = { ["size"] = cubeSize * 3, ["model"] = "models/hunter/blocks/cube075x075x075.mdl" },
+	["4"] = { ["size"] = cubeSize * 4, ["model"] = "models/hunter/blocks/cube1x1x1.mdl" },
+	["8"] = { ["size"] = cubeSize * 8, ["model"] = "models/hunter/blocks/cube2x2x2.mdl" },
+	["16"] = { ["size"] = cubeSize * 16, ["model"] = "models/hunter/blocks/cube4x4x4.mdl" },
+	["24"] = { ["size"] = cubeSize * 24, ["model"] = "models/hunter/blocks/cube6x6x6.mdl" },
+	["32"] = { ["size"] = cubeSize * 32, ["model"] = "models/hunter/blocks/cube8x8x8.mdl" }
+}
+
 CUBE_NAME_FORMAT = "rt:%s:%s:cube:%f,%f,%f"
 TEXT_CUBES_FINDING_PATTERN = "rt:NAME:%a:cube:.*"
 ANCHOR_MODEL = "models/hunter/plates/plate025x025.mdl"
+
+DEFAULT_ARG_SIZE = "1"
 
 DEFAULT_ARG_TEXT_NAME = "justtext"
 DEFAULT_ARG_TEXT = "I love You"
@@ -119,9 +124,19 @@ function renderText(pos, text, name, eyeTrace, angle, anchor)
 end
 
 function applyRandomMomentum(ent)
-	local phys = ent:GetPhysicsObject()
+	local power = 2.7
 
-	phys:ApplyForceCenter(Vector(cubeSize * 0.3, 0, 0))
+	local theta = math.random(0, 360)
+	local unit = math.pow(cubeSize, power)
+	local movementVec = Vector(cos(theta) * unit - sin(theta) * unit, sin(theta) * unit + cos(theta) * unit, 0)
+
+	timer.Simple(0, function()
+		local phys = ent:GetPhysicsObject()
+		phys:Wake()
+		phys:ApplyForceCenter(movementVec)
+		phys:Wake()	
+	end)
+
 end
 
 
