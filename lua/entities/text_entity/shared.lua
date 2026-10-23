@@ -1,14 +1,26 @@
 include("assets/symbols_table.lua")
 include("vector.lua")
 
-CUBE_SIZE = 11.85
-CUBE_MODEL = "models/hunter/blocks/cube025x025x025.mdl"
+CUBE_PARAMETERS = {
+	["1"] = { ["size"] = 11.85, ["model"] = "models/hunter/blocks/cube025x025x025.mdl" },
+	["2"] = { ["size"] = 11.85 * 2, ["model"] = "models/hunter/blocks/cube05x05x05.mdl" },
+	["3"] = { ["size"] = 11.85 * 3, ["model"] = "models/hunter/blocks/cube075x075x075.mdl" },
+	["4"] = { ["size"] = 11.85 * 4, ["model"] = "models/hunter/blocks/cube1x1x1.mdl" },
+	["8"] = { ["size"] = 11.85 * 8, ["model"] = "models/hunter/blocks/cube2x2x2.mdl" },
+	["16"] = { ["size"] = 11.85 * 16, ["model"] = "models/hunter/blocks/cube4x4x4.mdl" },
+	["24"] = { ["size"] = 11.85 * 24, ["model"] = "models/hunter/blocks/cube6x6x6.mdl" },
+	["32"] = { ["size"] = 11.85 * 32, ["model"] = "models/hunter/blocks/cube8x8x8.mdl" }
+}
+
+DEFAULT_ARG_SIZE = "1"
+cubeSize = 11.85
+cubeModel = "models/hunter/blocks/cube025x025x025.mdl"
 CUBE_NAME_FORMAT = "rt:%s:%s:cube:%f,%f,%f"
 TEXT_CUBES_FINDING_PATTERN = "rt:NAME:%a:cube:.*"
 ANCHOR_MODEL = "models/hunter/plates/plate025x025.mdl"
 
-DEFAULT_TEXT_NAME = "justtext"
-DEFAULT_TEXT = "I love You"
+DEFAULT_ARG_TEXT_NAME = "justtext"
+DEFAULT_ARG_TEXT = "I love You"
 
 AddCSLuaFile()
 
@@ -38,7 +50,7 @@ end
 function spawnCube(pos, angle)
 	local cube = ents.Create("prop_physics")
 
-	cube:SetModel(CUBE_MODEL)
+	cube:SetModel(cubeModel)
 	cube:SetPos(pos)
 	cube:SetAngles(angle)
 	cube:Spawn()
@@ -62,12 +74,12 @@ function getFaceAngle(eyeTraceVec)
 end
 
 function getTextDirectionVector(eyeTrace)
-	return Vector(eyeTrace.y, -eyeTrace.x, 0):GetNormalized() * CUBE_SIZE
+	return Vector(eyeTrace.y, -eyeTrace.x, 0):GetNormalized() * cubeSize
 end
 
 function renderText(pos, text, name, eyeTrace, angle, anchor)
 	local dirVec = getTextDirectionVector(eyeTrace)
-	local verticalVector = Vector(0, 0, -CUBE_SIZE)
+	local verticalVector = Vector(0, 0, -cubeSize)
 	local textHeight = 0
 	local textWidth = 0
 
@@ -113,17 +125,20 @@ function ENT:Initialize()
 	local startPos = ply:GetPos()
 	local eyeTraceVec = ply:GetEyeTrace().Normal
 
-	local pos = startPos + eyeTraceVec * (distance(startPos, hitPos) / 2) + Vector(0,0,1) * CUBE_SIZE * 5
+	local pos = startPos + eyeTraceVec * (distance(startPos, hitPos) / 2) + Vector(0,0,1) * cubeSize * 5
 
 	self:SetModel(model)
 
 	-- Only set up physics on the server since it tends to create weird issues if you do it on the client.
 	if SERVER then
-		local name = DEFAULT_TEXT_NAME
-		local text = DEFAULT_TEXT
+		local name = DEFAULT_ARG_TEXT_NAME
+		local text = DEFAULT_ARG_TEXT
 		if self.SpawnArgument then
-			name = self.SpawnArgument.name or DEFAULT_TEXT_NAME
-			text = self.SpawnArgument.text or DEFAULT_TEXT
+			name = self.SpawnArgument.name or DEFAULT_ARG_TEXT_NAME
+			text = self.SpawnArgument.text or DEFAULT_ARG_TEXT
+			self.SpawnArgument.size = self.SpawnArgument.size or DEFAULT_ARG_SIZE
+			cubeSize = CUBE_PARAMETERS[self.SpawnArgument.size].size
+			cubeModel = CUBE_PARAMETERS[self.SpawnArgument.size].model
 		end
 
     		self:PhysicsInit(SOLID_VPHYSICS)
