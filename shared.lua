@@ -2,6 +2,7 @@ include("vector.lua")
 
 CUBE_SIZE = 11.85
 CUBE_MODEL = "models/hunter/blocks/cube025x025x025.mdl"
+CUBE_NAME_FORMAT = "rt:%s:%s:cube:%f.%f.%f"
 
 AddCSLuaFile()
 
@@ -43,6 +44,11 @@ function getFaceAngle(eyeTraceVec)
 	return Angle(0, OyAngleDeg, 90)
 end
 
+function setCubeName(cube, letter, text)
+	local pos = cobe:GetPos()
+	cube:SetName(string.format(CUBE_NAME_FORMAT, string.sub(text, 1, 9), letter, pos.x, pos.y, pos.z))
+end
+
 function spawnCube(pos, angle)
 	local cube = ents.Create("prop_physics")
 
@@ -51,13 +57,15 @@ function spawnCube(pos, angle)
 	cube:SetAngles(angle)
 	cube:Spawn()
 	cube:GetPhysicsObject():EnableMotion(false)
+
+	return cube
 end
 
 function getTextDirectionVector(eyeTrace)
 	return Vector(eyeTrace.y, -eyeTrace.x, 0):GetNormalized() * CUBE_SIZE
 end
 
-function renderText(pos, text, eyeTrace, angle)
+function renderText(pos, text, eyeTrace, angle, anchor)
 	local dirVec = getTextDirectionVector(eyeTrace)
 	local verticalVector = Vector(0, 0, -CUBE_SIZE)
 	local textHeight = 0
@@ -70,11 +78,13 @@ function renderText(pos, text, eyeTrace, angle)
 
 	local symStartPos = pos - dirVec * (textWidth / 2) - verticalVector * textHeight
 	for sym in string.gmatch(text, ".") do
-
+		
 		local repr = symbols_table[sym]
 
 		for i, coords in ipairs(repr.bitmap) do
-			spawnCube(symStartPos + dirVec * coords[1] + verticalVector * coords[2], angle)
+			local cube = spawnCube(symStartPos + dirVec * coords[1] + verticalVector * coords[2], angle)
+			setCubeName(cube, sym, text)
+			constraint.Weld(anchor, cube, 0, 0, 0, true, false)
 		end
 		symStartPos = symStartPos + dirVec * repr.width
 
@@ -93,19 +103,21 @@ function ENT:Initialize()
 
 	local pos = startPos + eyeTraceVec * (distance(startPos, hitPos) / 2)
 
+	local faceAngle = nil
+
 	self:SetModel(name)
 
 	-- Only set up physics on the server since it tends to create weird issues if you do it on the client.
 	if SERVER then
-    		self:PhysicsInit(SOLID_VPHYSICS)
-    		self:SetMoveType(MOVETYPE_VPHYSICS)
-    		self:SetSolid(SOLID_VPHYSICS)
+    	self:PhysicsInit(SOLID_VPHYSICS)
+    	self:SetMoveType(MOVETYPE_VPHYSICS)
+    	self:SetSolid(SOLID_VPHYSICS)
 		self:SetPos(pos)
 
-		local faceAngle = getFaceAngle(eyeTraceVec)
+		faceAngle = getFaceAngle(eyeTraceVec)
 		self:SetAngles(faceAngle)
 
-		renderText(pos, "qwerty", eyeTraceVec, faceAngle)
+		renderText(pos, "qwerty", eyeTraceVec, faceAngle, self)
 	end
 
     local phys = self:GetPhysicsObject()
