@@ -6,6 +6,9 @@ CUBE_MODEL = "models/hunter/blocks/cube025x025x025.mdl"
 CUBE_NAME_FORMAT = "rt:%s:%s:cube:%f,%f,%f"
 TEXT_CUBES_FINDING_PATTERN = "rt:NAME:%a:cube:.*"
 
+DEFAULT_TEXT_NAME = "justtext"
+DEFAULT_TEXT = "I love You"
+
 AddCSLuaFile()
 
 ENT.Type = "anim"
@@ -118,7 +121,8 @@ end
 -- This code runs whenever the entity is created.
 function ENT:Initialize()
 	local model = "models/hunter/plates/plate025x025.mdl"
-	local name = "qE"
+	local name = self.SpawnArgument.name or DEFAULT_TEXT_NAME
+	local text = self.SpawnArgument.text or DEFAULT_TEXT
 	local ply = Entity(1)
 
 	local hitPos = ply:GetEyeTrace().HitPos
@@ -142,7 +146,7 @@ function ENT:Initialize()
 		faceAngle = getFaceAngle(eyeTraceVec)
 		self:SetAngles(faceAngle)
 
-		renderText(pos, "I love You", name, eyeTraceVec, faceAngle, self)
+		renderText(pos, text, name, eyeTraceVec, faceAngle, self)
 	end
 
     local phys = self:GetPhysicsObject()
@@ -155,12 +159,11 @@ function ENT:Initialize()
 
     -- This is required to allow the entity to be gibbed.
     if ( SERVER ) then self:PrecacheGibs() end
-	
 end
 
 function ENT:OnRemove()
     if ( SERVER ) then
         removeText(self:GetName())
-	print("Removed")
+		print("Removed")
     end
 end
