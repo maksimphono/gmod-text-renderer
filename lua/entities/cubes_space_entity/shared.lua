@@ -56,6 +56,8 @@ end
 function ENT:Initialize()
 	self.cubes = {}
 
+	local hitPos = Entity(1):GetEyeTrace().HitPos
+
 	-- Only set up physics on the server since it tends to create weird issues if you do it on the client.
 	if SERVER then
 		if self.SpawnArgument then
@@ -70,7 +72,7 @@ function ENT:Initialize()
 		self:SetSolid(SOLID_NONE)
 		self:SetName(DEFAULT_CUBE_SPACE_NAME)
 
-		self:FillSpace(ply:GetEyeTrace().HitPos + Vector(0,0,cubeSize), 8, 0.17)
+		self:FillSpace(hitPos + Vector(0,0,cubeSize), 8, 0.17)
 	end
 end
 
@@ -94,10 +96,11 @@ function ENT:FillSpace(startPos, size, density)
 
 end
 
-function ENT:OnThink()
+function ENT:Think()
+	local directions = {Vector(1, 0, 0), Vector(0, 1, 0), Vector(0, 0, 1), Vector(-1, 0, 0), Vector(0, -1, 0), Vector(0, 0, -1)}
 	for i, cube in ipairs(self.cubes) do
 		local pos = cube:GetPos()
-		cube:SetPos(pos + Vector(1, 0, 0) * 200 * FrameTime())
+		cube:SetPos(pos + Vector(1, 0, 0) * 100 * FrameTime())
 	end
 	
 	self:NextThink(CurTime())
