@@ -1,0 +1,1 @@
+DEFAULT_CUBE_NAME = "cube_space"
