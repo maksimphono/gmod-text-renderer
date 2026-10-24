@@ -33,7 +33,7 @@ ENT.PrintName   = "Text"
 
 ENT.Information = "Render text using cubes"
 
-ENT.Author      = "maksimphono"
+ENT.Autho	= "maksimphono"
 
 
 ENT.Spawnable = true
@@ -82,6 +82,7 @@ function renderText(pos, text, name, eyeTrace, angle, anchor)
 	local verticalVector = Vector(0, 0, -cubeSize)
 	local textHeight = 0
 	local textWidth = 0
+	local spawnedCubes = {}
 
 	for sym in string.gmatch(text, ".") do
 		if symbols_table[sym].height > textHeight then textHeight = symbols_table[sym].height end
@@ -99,6 +100,7 @@ function renderText(pos, text, name, eyeTrace, angle, anchor)
 			local cube = spawnCube(symStartPos + dirVec * coords[1] + verticalVector * coords[2], angle)
 			setCubeName(cube, sym, name)
 			table.insert(cubes, 1, cube)
+			table.insert(spawnedCubes, 1, cube)
 		end
 
 		-- Welding cubes to anchor and disabling collision
@@ -113,6 +115,13 @@ function renderText(pos, text, name, eyeTrace, angle, anchor)
 
 	end
 	
+	return spawnedCubes
+end
+
+function applyRandomMomentum(ent)
+	local phys = ent:GetPhysicsObject()
+
+	phys:ApplyForceCenter(Vector(cubeSize * 0.3, 0, 0))
 end
 
 
@@ -141,32 +150,35 @@ function ENT:Initialize()
 			cubeModel = CUBE_PARAMETERS[self.SpawnArgument.size].model
 		end
 
-    		self:PhysicsInit(SOLID_VPHYSICS)
-    		self:SetMoveType(MOVETYPE_VPHYSICS)
-    		self:SetSolid(SOLID_VPHYSICS)
+		self:PhysicsInit(SOLID_VPHYSICS)
+		self:SetMoveType(MOVETYPE_VPHYSICS)
+		self:SetSolid(SOLID_VPHYSICS)
 		self:SetPos(pos)
 		self:SetName(name)
 
 		local faceAngle = getFaceAngle(eyeTraceVec)
 		self:SetAngles(faceAngle)
 
-		renderText(pos, text, name, eyeTraceVec, faceAngle, self)
+		self.cubes = renderText(pos, text, name, eyeTraceVec, faceAngle, self)
 	end
 
-    local phys = self:GetPhysicsObject()
+	local phys = self:GetPhysicsObject()
 
-    -- This will make the entity fall instead of being stuck in the air when spawned.
-    if ( IsValid(phys) ) then
+	-- This will make the entity fall instead of being stuck in the air when spawned.
+	if ( IsValid(phys) ) then
 		phys:EnableMotion(false)
-    	phys:Wake()
-    end
+		phys:Wake()
+	end
 
-    -- This is required to allow the entity to be gibbed.
-    if ( SERVER ) then self:PrecacheGibs() end
+	-- This is required to allow the entity to be gibbed.
+	if ( SERVER ) then self:PrecacheGibs() end
 end
 
 function ENT:OnRemove()
-    if ( SERVER ) then
-	print("Removed")
-    end
+	if ( SERVER ) then
+		for i, cube in ipairs(self.cubes) do
+			applyRandomMomentum(cube)
+		end
+		print("Removed")
+	end
 end
