@@ -95,6 +95,13 @@ function ENT:FillSpace(startPos, size, density)
 end
 
 function ENT:OnThink()
+	for i, cube in ipairs(self.cubes) do
+		local pos = cube:GetPos()
+		cube:SetPos(pos + Vector(1, 0, 0) * 200 * FrameTime())
+	end
+	
+	self:NextThink(CurTime())
+    return true
 end
 
 function ENT:OnRemove()
