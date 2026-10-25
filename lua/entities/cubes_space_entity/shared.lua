@@ -39,18 +39,12 @@ ENT.Category = "Other"
 
 
 function __spawnCube(pos)
-	local cube = ents.Create("prop_physics")
+	local cube = ents.Create("move_push_cube")
 
-	cube:SetModel(cubeModel)
-	cube:SetPos(pos)
-	cube:SetAngles(Angle(0,0,0))
+	cube.SpawnArgument.pos = pos
+	cube.SpawnArgument.model = cubeModel
+
 	cube:Spawn()
-	cube:SetName(DEFAULT_CUBE_NAME)
-	cube:SetMoveType(MOVETYPE_PUSH)
-	local phys = cube:GetPhysicsObject()
-	phys:SetMass(9999)
-	phys:EnableMotion(true)
-	phys:Wake()
 
 	return cube
 end
@@ -103,7 +97,7 @@ function ENT:Think()
 	local directions = {Vector(1, 0, 0), Vector(0, 1, 0), Vector(0, 0, 1), Vector(-1, 0, 0), Vector(0, -1, 0), Vector(0, 0, -1)}
 	for i, cube in ipairs(self.cubes) do
 		local pos = cube:GetPos()
-		
+
 		cube:GetPhysicsObject():SetVelocity(Vector(cubeSize, 0, 0) * 10)
 		print(pos)
 	end
