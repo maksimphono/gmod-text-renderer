@@ -39,8 +39,9 @@ ENT.Category = "Other"
 
 
 function __spawnCube(pos)
-	local cube = ents.Create("move_push_cube")
+	local cube = ents.Create("movepush_cube_entity")
 
+	cube.SpawnArgument = {}
 	cube.SpawnArgument.pos = pos
 	cube.SpawnArgument.model = cubeModel
 
@@ -97,8 +98,10 @@ function ENT:Think()
 	local directions = {Vector(1, 0, 0), Vector(0, 1, 0), Vector(0, 0, 1), Vector(-1, 0, 0), Vector(0, -1, 0), Vector(0, 0, -1)}
 	for i, cube in ipairs(self.cubes) do
 		local pos = cube:GetPos()
-
-		cube:GetPhysicsObject():SetVelocity(Vector(cubeSize, 0, 0) * 10)
+		local phys = cube:GetPhysicsObject()
+		phys:SetVelocity(Vector(100, 0, 0)
+		cube:SetPos(phys:GetPos())
+		--cube:SetAngles(phys:GetAngles())
 		print(pos)
 	end
 	

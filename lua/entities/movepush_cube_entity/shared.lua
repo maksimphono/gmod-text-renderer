@@ -20,16 +20,6 @@ ENT.Category = "Other"
 
 -- This code runs whenever the entity is created.
 function ENT:Initialize()
-	self:PhysicsInit(SOLID_VPHYSICS)
-    self:SetSolid(SOLID_VPHYSICS)
-    self:SetMoveType(MOVETYPE_PUSH)
-	self:SetAngles(Angle(0,0,0))
-	self:SetName(DEFAULT_CUBE_NAME)
-	local phys = self:GetPhysicsObject()
-	phys:SetMass(9999)
-	phys:EnableMotion(true)
-	phys:Wake()
-
 	-- Only set up physics on the server since it tends to create weird issues if you do it on the client.
 	if SERVER then
 		if self.SpawnArgument == nil then
@@ -41,7 +31,17 @@ function ENT:Initialize()
 		self:SetPos(self.SpawnArgument.pos)
 		self:SetModel(self.SpawnArgument.model)
 
+		self:SetName(DEFAULT_CUBE_NAME)
 	end
+	self:PhysicsInit(SOLID_VPHYSICS)
+	self:SetSolid(SOLID_VPHYSICS)
+	self:SetMoveType(MOVETYPE_PUSH)
+	self:SetAngles(Angle(0,0,0))
+	local phys = self:GetPhysicsObject()
+	phys:SetMass(9999)
+	phys:EnableMotion(true)
+	phys:EnableGravity(false)
+	phys:Wake()
 end
 
 function ENT:OnRemove()
