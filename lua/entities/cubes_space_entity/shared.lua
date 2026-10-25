@@ -18,6 +18,8 @@ CUBE_PARAMETERS = {
 DEFAULT_CUBE_NAME = "__cube__"
 DEFAULT_CUBE_SPACE_NAME = "__cube_space__"
 
+MOVEMENT_SPEED_COEFFICIENT = 3
+
 AddCSLuaFile()
 
 ENT.Type = "anim"
@@ -64,6 +66,10 @@ function ENT:Initialize()
 			cubeModel = CUBE_PARAMETERS[self.SpawnArgument.size].model
 		end
 
+		-- remove me
+		cubeSize = CUBE_PARAMETERS["16"].size
+		cubeModel = CUBE_PARAMETERS["16"].model
+
 		self:SetNoDraw(true)
 		self:DrawShadow(false)
 		self:SetMoveType(MOVETYPE_NONE)
@@ -102,23 +108,23 @@ function ENT:Think()
 		local phys = cube:GetPhysicsObject()
 
 		if not cube.movementState.isMoving then
-			if math.random() < 0.02 then
+			if math.random() < 0.0005 then
 				-- start moving
 				local dir = directions[math.random(1, 6)]
 				cube.movementState.isMoving = true
 				cube.movementState.target = cube:GetPos() + dir * cubeSize
-				phys:SetVelocity((cube.movementState.target - cube:GetPos()):GetNormalized() * cubeSize * 10)
+				phys:SetVelocity((cube.movementState.target - cube:GetPos()):GetNormalized() * cubeSize * MOVEMENT_SPEED_COEFFICIENT)
 			end
 		else
 			-- moving already
-			if cube:GetPos():Distance(cube.movementState.target) < 5 then
+			if cube:GetPos():Distance(cube.movementState.target) < 0.05 * cubeSize then
 				-- arrived
 				cube.movementState.isMoving = false
 				cube:SetPos(cube.movementState.target)
 				phys:SetPos(cube.movementState.target)
 			else
 				-- not arived yet, keep going
-				phys:SetVelocity((cube.movementState.target - cube:GetPos()):GetNormalized() * cubeSize * 10)
+				phys:SetVelocity((cube.movementState.target - cube:GetPos()):GetNormalized() * cubeSize * MOVEMENT_SPEED_COEFFICIENT)
 				cube:SetPos(phys:GetPos())
 			end
 		end
