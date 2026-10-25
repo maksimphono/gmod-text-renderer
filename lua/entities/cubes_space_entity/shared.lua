@@ -71,7 +71,7 @@ function ENT:Initialize()
 		-- remove me
 		cubeSize = CUBE_PARAMETERS["16"].size
 		cubeModel = CUBE_PARAMETERS["16"].model
-		dimension = 8
+		dimension = 4
 
 		self:SetNoDraw(true)
 		self:DrawShadow(false)
@@ -79,7 +79,7 @@ function ENT:Initialize()
 		self:SetSolid(SOLID_NONE)
 		self:SetName(DEFAULT_CUBE_SPACE_NAME)
 
-		self:FillSpace(hitPos + Vector(0,0,cubeSize), 8, 0.17)
+		self:FillSpace(hitPos + Vector(0,0,cubeSize), dimension, 0.17)
 	end
 end
 
@@ -104,11 +104,14 @@ function ENT:FillSpace(startPos, size, density)
 end
 
 function ENT:CheckBoundaries(targetPos)
+	-- returns true if boundaries detected
 	--local switchLut = {
 	--	[1] = function() return targetPos.x >= dimension end
 	--	[1] = function() return targetPos.x >= dimension end
 	--}
-	return targetPos.x >= dimension or targetPos.x < 0 or targetPos.y >= dimension or targetPos.y < 0 or targetPos.z >= dimension or targetPos.z < 0
+	print("Checking boundaries for ", targetPos, targetPos.x >= dimension or targetPos.x < 1 or targetPos.y >= dimension or targetPos.y < 1 or targetPos.z >= dimension or targetPos.z < 1)
+	--return false
+	return targetPos.x >= dimension or targetPos.x < 1 or targetPos.y >= dimension or targetPos.y < 1 or targetPos.z >= dimension or targetPos.z < 1
 end
 
 function ENT:Think()
@@ -118,21 +121,32 @@ function ENT:Think()
 		local pos = cube:GetPos()
 		local phys = cube:GetPhysicsObject()
 
+		if 1 then
+
 		if not cube.movementState.isMoving then
-			if math.random() < 0.001 then
+			if math.random() < 0.01 then
 				-- start moving
 				local id = math.random(1, 6)
 				local dir = directions[id]
+				local canMove = false
 
-				while self:CheckBoundaries(cube.movementState.internalPos + dir) do
-					id = (id + 1) <= 6 and (id + 1) or 1
-					dir = directions[id]
+				for _ = 1,6,1 do
+					if self:CheckBoundaries(cube.movementState.internalPos + dir) then
+						id = (id + 1) <= 6 and (id + 1) or 1
+						dir = directions[id]
+					else
+						canMove = true
+						break
+					end
 				end
+
+				if canMove then
 
 				cube.movementState.isMoving = true
 				cube.movementState.target = cube:GetPos() + dir * cubeSize
 				cube.movementState.targetPos = cube.movementState.targetPos + dir
 				phys:SetVelocity((cube.movementState.target - cube:GetPos()):GetNormalized() * cubeSize * MOVEMENT_SPEED_COEFFICIENT)
+				end
 			end
 		else
 			-- moving already
@@ -151,6 +165,8 @@ function ENT:Think()
 
 		--cube:SetAngles(phys:GetAngles())
 		print(pos)
+		end
+
 	end
 	
 	self:NextThink(CurTime())
