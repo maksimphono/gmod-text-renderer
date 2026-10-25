@@ -115,24 +115,22 @@ function ENT:CheckBoundaries(targetPos)
 end
 
 function ENT:Think()
-	local directions = {Vector(1, 0, 0), Vector(0, 1, 0), Vector(0, 0, 1), Vector(-1, 0, 0), Vector(0, -1, 0), Vector(0, 0, -1)}
+	local directions = {[0] = Vector(1, 0, 0), [1] = Vector(0, 1, 0), [2] = Vector(0, 0, 1), [3] = Vector(-1, 0, 0), [4] = Vector(0, -1, 0), [5] = Vector(0, 0, -1)}
 
 	for i, cube in ipairs(self.cubes) do
 		local pos = cube:GetPos()
 		local phys = cube:GetPhysicsObject()
 
-		if 1 then
-
 		if not cube.movementState.isMoving then
 			if math.random() < 0.01 then
 				-- start moving
-				local id = math.random(1, 6)
+				local id = math.random(0, 5)
 				local dir = directions[id]
 				local canMove = false
 
 				for _ = 1,6,1 do
 					if self:CheckBoundaries(cube.movementState.internalPos + dir) then
-						id = (id + 1) <= 6 and (id + 1) or 1
+						id = (id + 1) % 6
 						dir = directions[id]
 					else
 						canMove = true
@@ -142,10 +140,10 @@ function ENT:Think()
 
 				if canMove then
 
-				cube.movementState.isMoving = true
-				cube.movementState.target = cube:GetPos() + dir * cubeSize
-				cube.movementState.targetPos = cube.movementState.targetPos + dir
-				phys:SetVelocity((cube.movementState.target - cube:GetPos()):GetNormalized() * cubeSize * MOVEMENT_SPEED_COEFFICIENT)
+					cube.movementState.isMoving = true
+					cube.movementState.target = cube:GetPos() + dir * cubeSize
+					cube.movementState.targetPos = cube.movementState.targetPos + dir
+					phys:SetVelocity((cube.movementState.target - cube:GetPos()):GetNormalized() * cubeSize * MOVEMENT_SPEED_COEFFICIENT)
 				end
 			end
 		else
@@ -165,7 +163,6 @@ function ENT:Think()
 
 		--cube:SetAngles(phys:GetAngles())
 		print(pos)
-		end
 
 	end
 	
