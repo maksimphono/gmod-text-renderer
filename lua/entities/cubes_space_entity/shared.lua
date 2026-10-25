@@ -100,7 +100,12 @@ function ENT:Think()
 	local directions = {Vector(1, 0, 0), Vector(0, 1, 0), Vector(0, 0, 1), Vector(-1, 0, 0), Vector(0, -1, 0), Vector(0, 0, -1)}
 	for i, cube in ipairs(self.cubes) do
 		local pos = cube:GetPos()
-		cube:SetPos(pos + Vector(1, 0, 0) * 100 * FrameTime())
+		local phys = cube:GetPhysicsObject()
+		phys:EnableGravity(false)
+		phys:EnableMotion(true)
+		phys:SetMass(9999)
+		phys:SetVelocity(Vector(1, 0, 0) * 100)
+		phys:Wake()
 	end
 	
 	self:NextThink(CurTime())
