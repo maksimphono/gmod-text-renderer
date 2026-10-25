@@ -96,11 +96,33 @@ end
 
 function ENT:Think()
 	local directions = {Vector(1, 0, 0), Vector(0, 1, 0), Vector(0, 0, 1), Vector(-1, 0, 0), Vector(0, -1, 0), Vector(0, 0, -1)}
+
 	for i, cube in ipairs(self.cubes) do
 		local pos = cube:GetPos()
 		local phys = cube:GetPhysicsObject()
-		phys:SetVelocity(Vector(100, 0, 0)
-		cube:SetPos(phys:GetPos())
+
+		if not cube.movementState.isMoving then
+			if math.random() < 0.02 then
+				-- start moving
+				local dir = directions[math.random(1, 6)]
+				cube.movementState.isMoving = true
+				cube.movementState.target = cube:GetPos() + dir * cubeSize
+				phys:SetVelocity((cube.movementState.target - cube:GetPos()):GetNormalized() * cubeSize * 10)
+			end
+		else
+			-- moving already
+			if cube:GetPos():Distance(cube.movementState.target) < 5 then
+				-- arrived
+				cube.movementState.isMoving = false
+				cube:SetPos(cube.movementState.target)
+				phys:SetPos(cube.movementState.target)
+			else
+				-- not arived yet, keep going
+				phys:SetVelocity((cube.movementState.target - cube:GetPos()):GetNormalized() * cubeSize * 10)
+				cube:SetPos(phys:GetPos())
+			end
+		end
+
 		--cube:SetAngles(phys:GetAngles())
 		print(pos)
 	end
