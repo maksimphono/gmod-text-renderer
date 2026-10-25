@@ -15,14 +15,8 @@ CUBE_PARAMETERS = {
 	["32"] = { ["size"] = cubeSize * 32, ["model"] = "models/hunter/blocks/cube8x8x8.mdl" }
 }
 
-CUBE_NAME_FORMAT = "rt:%s:%s:cube:%f,%f,%f"
-TEXT_CUBES_FINDING_PATTERN = "rt:NAME:%a:cube:.*"
-ANCHOR_MODEL = "models/hunter/plates/plate025x025.mdl"
-
-DEFAULT_ARG_SIZE = "1"
-
-DEFAULT_ARG_TEXT_NAME = "justtext"
-DEFAULT_ARG_TEXT = "I love You"
+DEFAULT_CUBE_NAME = "__cube__"
+DEFAULT_CUBE_SPACE_NAME = "__cube_space__"
 
 AddCSLuaFile()
 
@@ -58,74 +52,46 @@ function spawnCube(pos)
 	return cube
 end
 
-
-function fillSpace(startPos, size, density)
-	local cubes = {}
-	for i = 1,size,1 do
-		for j = 1,size,1 do
-			for k = 1,size,1 do
-				if math.random() < density then
-					table.insert(cubes, 1, spawnCube(startPos + Vector(i * cubeSize, j * cubeSize, k * cubeSize)))
-				end
-			end
-		end
-	end
-
-	for i = 1,#cubes,1 do
-		for j = i + 1,#cubes,1 do
-			constraint.NoCollide(cubes[i], cubes[j], 0, 0)
-		end
-	end
-end
-
-
 -- This code runs whenever the entity is created.
 function ENT:Initialize()
-	local model = ANCHOR_MODEL
-	local ply = Entity(1)
-
-	local hitPos = ply:GetEyeTrace().HitPos
-	local startPos = ply:GetPos()
-	local eyeTraceVec = ply:GetEyeTrace().Normal
-
-	local pos = startPos + eyeTraceVec * (distance(startPos, hitPos) / 2) + Vector(0,0,1) * cubeSize * 5
-
-	self:SetModel(model)
+	self.cubes = {}
 
 	-- Only set up physics on the server since it tends to create weird issues if you do it on the client.
 	if SERVER then
-		local name = DEFAULT_ARG_TEXT_NAME
-		local text = DEFAULT_ARG_TEXT
 		if self.SpawnArgument then
-			name = self.SpawnArgument.name or DEFAULT_ARG_TEXT_NAME
-			text = self.SpawnArgument.text or DEFAULT_ARG_TEXT
 			self.SpawnArgument.size = self.SpawnArgument.size or DEFAULT_ARG_SIZE
 			cubeSize = CUBE_PARAMETERS[self.SpawnArgument.size].size
 			cubeModel = CUBE_PARAMETERS[self.SpawnArgument.size].model
 		end
 
-		self:PhysicsInit(SOLID_VPHYSICS)
-		self:SetMoveType(MOVETYPE_VPHYSICS)
-		self:SetSolid(SOLID_VPHYSICS)
-		self:SetPos(pos)
-		self:SetName(name)
+		self:SetNoDraw(true)
+		self:DrawShadow(false)
+		self:SetMoveType(MOVETYPE_NONE)
+		self:SetSolid(SOLID_NONE)
+		self:SetName(DEFAULT_CUBE_SPACE_NAME)
 
-		local faceAngle = getFaceAngle(eyeTraceVec)
-		self:SetAngles(faceAngle)
+		self:FillSpace(ply:GetEyeTrace().HitPos + Vector(0,0,cubeSize), 8, 0.17)
+	end
+end
 
-		self.cubes = renderText(pos, text, name, eyeTraceVec, faceAngle, self)
+function ENT:FillSpace(startPos, size, density)
+	self.cubes = {}
+	for i = 1,size,1 do
+		for j = 1,size,1 do
+			for k = 1,size,1 do
+				if math.random() < density then
+					table.insert(self.cubes, 1, spawnCube(startPos + Vector(i * cubeSize, j * cubeSize, k * cubeSize)))
+				end
+			end
+		end
 	end
 
-	local phys = self:GetPhysicsObject()
-
-	-- This will make the entity fall instead of being stuck in the air when spawned.
-	if ( IsValid(phys) ) then
-		phys:EnableMotion(false)
-		phys:Wake()
+	for i = 1,#self.cubes,1 do
+		for j = i + 1,#self.cubes,1 do
+			constraint.NoCollide(self.cubes[i], self.cubes[j], 0, 0)
+		end
 	end
 
-	-- This is required to allow the entity to be gibbed.
-	if ( SERVER ) then self:PrecacheGibs() end
 end
 
 function ENT:OnThink()
@@ -133,8 +99,8 @@ end
 
 function ENT:OnRemove()
 	if ( SERVER ) then
-		for i, cube in ipairs(self.cubes) do
-			applyRandomMomentum(cube)
+		for i, ent in ipairs(self.cubes) do
+			ent:Remove()
 		end
 		print("Removed")
 	end
