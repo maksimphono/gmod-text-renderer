@@ -57,7 +57,7 @@ function spawnCube(pos, angle)
 
 	cube:SetModel(cubeModel)
 	cube:SetPos(pos)
-	cube:SetAngles(angle)
+	cube:SetAngles(angle * 1)
 	cube:Spawn()
 	cube:GetPhysicsObject():EnableMotion(true)
 	cube:GetPhysicsObject():Wake()

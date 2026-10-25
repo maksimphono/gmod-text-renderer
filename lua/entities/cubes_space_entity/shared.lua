@@ -38,7 +38,7 @@ ENT.Spawnable = true
 ENT.Category = "Other"
 
 
-function spawnCube(pos)
+function __spawnCube(pos)
 	local cube = ents.Create("prop_physics")
 
 	cube:SetModel(cubeModel)
@@ -46,8 +46,11 @@ function spawnCube(pos)
 	cube:SetAngles(Angle(0,0,0))
 	cube:Spawn()
 	cube:SetName(DEFAULT_CUBE_NAME)
-	cube:GetPhysicsObject():EnableMotion(false)
-	cube:GetPhysicsObject():Wake()
+	cube:SetMoveType(MOVETYPE_PUSH)
+	local phys = cube:GetPhysicsObject()
+	phys:SetMass(9999)
+	phys:EnableMotion(true)
+	phys:Wake()
 
 	return cube
 end
@@ -82,7 +85,7 @@ function ENT:FillSpace(startPos, size, density)
 		for j = 1,size,1 do
 			for k = 1,size,1 do
 				if math.random() < density then
-					table.insert(self.cubes, 1, spawnCube(startPos + Vector(i * cubeSize, j * cubeSize, k * cubeSize)))
+					table.insert(self.cubes, 1, __spawnCube(startPos + Vector(i * cubeSize, j * cubeSize, k * cubeSize)))
 				end
 			end
 		end
@@ -100,12 +103,9 @@ function ENT:Think()
 	local directions = {Vector(1, 0, 0), Vector(0, 1, 0), Vector(0, 0, 1), Vector(-1, 0, 0), Vector(0, -1, 0), Vector(0, 0, -1)}
 	for i, cube in ipairs(self.cubes) do
 		local pos = cube:GetPos()
-		local phys = cube:GetPhysicsObject()
-		phys:EnableGravity(false)
-		phys:EnableMotion(true)
-		phys:SetMass(9999)
-		phys:SetVelocity(Vector(1, 0, 0) * 100)
-		phys:Wake()
+		
+		cube:GetPhysicsObject():SetVelocity(Vector(cubeSize, 0, 0) * 10)
+		print(pos)
 	end
 	
 	self:NextThink(CurTime())
