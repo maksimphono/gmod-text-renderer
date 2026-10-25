@@ -3,6 +3,7 @@ local sin = math.sin
 
 cubeSize = 11.85
 cubeModel = "models/hunter/blocks/cube025x025x025.mdl"
+dimension = 8
 
 CUBE_PARAMETERS = {
 	["1"] = { ["size"] = cubeSize, ["model"] = "models/hunter/blocks/cube025x025x025.mdl" },
@@ -40,12 +41,13 @@ ENT.Spawnable = true
 ENT.Category = "Other"
 
 
-function __spawnCube(pos)
+function __spawnCube(pos, internalPos)
 	local cube = ents.Create("movepush_cube_entity")
 
 	cube.SpawnArgument = {}
 	cube.SpawnArgument.pos = pos
 	cube.SpawnArgument.model = cubeModel
+	cube.SpawnArgument.internalPos = internalPos
 
 	cube:Spawn()
 
@@ -69,6 +71,7 @@ function ENT:Initialize()
 		-- remove me
 		cubeSize = CUBE_PARAMETERS["16"].size
 		cubeModel = CUBE_PARAMETERS["16"].model
+		dimension = 8
 
 		self:SetNoDraw(true)
 		self:DrawShadow(false)
@@ -86,7 +89,7 @@ function ENT:FillSpace(startPos, size, density)
 		for j = 1,size,1 do
 			for k = 1,size,1 do
 				if math.random() < density then
-					table.insert(self.cubes, 1, __spawnCube(startPos + Vector(i * cubeSize, j * cubeSize, k * cubeSize)))
+					table.insert(self.cubes, 1, __spawnCube(startPos + Vector(i * cubeSize, j * cubeSize, k * cubeSize), Vector(i, j, k)))
 				end
 			end
 		end
@@ -100,6 +103,14 @@ function ENT:FillSpace(startPos, size, density)
 
 end
 
+function ENT:CheckBoundaries(targetPos)
+	--local switchLut = {
+	--	[1] = function() return targetPos.x >= dimension end
+	--	[1] = function() return targetPos.x >= dimension end
+	--}
+	return targetPos.x >= dimension or targetPos.x < 0 or targetPos.y >= dimension or targetPos.y < 0 or targetPos.z >= dimension or targetPos.z < 0
+end
+
 function ENT:Think()
 	local directions = {Vector(1, 0, 0), Vector(0, 1, 0), Vector(0, 0, 1), Vector(-1, 0, 0), Vector(0, -1, 0), Vector(0, 0, -1)}
 
@@ -108,11 +119,19 @@ function ENT:Think()
 		local phys = cube:GetPhysicsObject()
 
 		if not cube.movementState.isMoving then
-			if math.random() < 0.0005 then
+			if math.random() < 0.001 then
 				-- start moving
-				local dir = directions[math.random(1, 6)]
+				local id = math.random(1, 6)
+				local dir = directions[id]
+
+				while self:CheckBoundaries(cube.movementState.internalPos + dir) do
+					id = (id + 1) <= 6 and (id + 1) or 1
+					dir = directions[id]
+				end
+
 				cube.movementState.isMoving = true
 				cube.movementState.target = cube:GetPos() + dir * cubeSize
+				cube.movementState.targetPos = cube.movementState.targetPos + dir
 				phys:SetVelocity((cube.movementState.target - cube:GetPos()):GetNormalized() * cubeSize * MOVEMENT_SPEED_COEFFICIENT)
 			end
 		else
@@ -120,6 +139,7 @@ function ENT:Think()
 			if cube:GetPos():Distance(cube.movementState.target) < 0.05 * cubeSize then
 				-- arrived
 				cube.movementState.isMoving = false
+				cube.movementState.internalPos = cube.movementState.targetPos
 				cube:SetPos(cube.movementState.target)
 				phys:SetPos(cube.movementState.target)
 			else

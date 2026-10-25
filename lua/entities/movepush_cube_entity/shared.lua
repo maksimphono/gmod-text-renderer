@@ -27,7 +27,7 @@ function ENT:Initialize()
 		end
 		self.SpawnArgument.pos = self.SpawnArgument.pos or Vector(0,0,0)
 		self.SpawnArgument.model = self.SpawnArgument.model or "models/hunter/blocks/cube025x025x025.mdl"
-		self.SpawnArgument.internalPos = self.SpawnArgument.internalPos or {0,0,0}
+		self.SpawnArgument.internalPos = self.SpawnArgument.internalPos or Vector(0,0,0)
 
 		self:SetPos(self.SpawnArgument.pos)
 		self:SetModel(self.SpawnArgument.model)
@@ -38,6 +38,7 @@ function ENT:Initialize()
 		self.movementState.target = self.SpawnArgument.pos
 		self.movementState.isMoving = false
 		self.movementState.internalPos = self.SpawnArgument.internalPos
+		cube.movementState.targetPos = self.movementState.internalPos
 
 	end
 
