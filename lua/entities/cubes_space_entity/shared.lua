@@ -78,10 +78,10 @@ function ENT:Initialize()
 			[5] = Vector(0, 0, -1)
 		}
 
-		-- remove me
+		-- parameters
 		cubeSize = CUBE_PARAMETERS["24"].size
 		cubeModel = CUBE_PARAMETERS["24"].model
-		dimension = 16
+		dimension = 8
 
 		self:SetNoDraw(true)
 		self:DrawShadow(false)
@@ -144,7 +144,7 @@ function ENT:Think()
 		local phys = cube:GetPhysicsObject()
 
 		if not cube.movementState.isMoving then
-			if math.random() < 0.00025 then
+			if math.random() < 1 / math.pow(dimension, 3) then
 				-- start moving
 				local id = math.random(0, 5)
 				local dir = self.directions[id]
