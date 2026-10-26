@@ -68,6 +68,16 @@ function ENT:Initialize()
 			cubeModel = CUBE_PARAMETERS[self.SpawnArgument.size].model
 		end
 
+		-- for cubes movements
+		self.directions = {
+			[0] = Vector(1, 0, 0), 
+			[1] = Vector(0, 1, 0), 
+			[2] = Vector(0, 0, 1), 
+			[3] = Vector(-1, 0, 0), 
+			[4] = Vector(0, -1, 0), 
+			[5] = Vector(0, 0, -1)
+		}
+
 		-- remove me
 		cubeSize = CUBE_PARAMETERS["16"].size
 		cubeModel = CUBE_PARAMETERS["16"].model
@@ -103,19 +113,28 @@ function ENT:FillSpace(startPos, size, density)
 
 end
 
-function ENT:CheckBoundaries(targetPos)
-	-- returns true if boundaries detected
+function ENT:CanMove(cube, id)
+	-- returns true if a cube can move
 	--local switchLut = {
 	--	[1] = function() return targetPos.x >= dimension end
 	--	[1] = function() return targetPos.x >= dimension end
 	--}
-	print("Checking boundaries for ", targetPos, targetPos.x >= dimension or targetPos.x < 1 or targetPos.y >= dimension or targetPos.y < 1 or targetPos.z >= dimension or targetPos.z < 1)
+	--print("Checking boundaries for ", targetPos, targetPos.x >= dimension or targetPos.x < 1 or targetPos.y >= dimension or targetPos.y < 1 or targetPos.z >= dimension or targetPos.z < 1)
 	--return false
-	return targetPos.x >= dimension or targetPos.x < 1 or targetPos.y >= dimension or targetPos.y < 1 or targetPos.z >= dimension or targetPos.z < 1
+
+	local switch = {
+		[0] = function(targetPos) return targetPos.x < dimension end,
+		[1] = function(targetPos) return targetPos.y < dimension end,
+		[2] = function(targetPos) return targetPos.z < dimension end,
+		[3] = function(targetPos) return targetPos.x >= 1 end,
+		[4] = function(targetPos) return targetPos.y >= 1 end,
+		[5] = function(targetPos) return targetPos.z >= 1 end
+	}
+
+	return switch[id](cube.internalPos + self.directions[id])
 end
 
 function ENT:Think()
-	local directions = {[0] = Vector(1, 0, 0), [1] = Vector(0, 1, 0), [2] = Vector(0, 0, 1), [3] = Vector(-1, 0, 0), [4] = Vector(0, -1, 0), [5] = Vector(0, 0, -1)}
 
 	for i, cube in ipairs(self.cubes) do
 		local pos = cube:GetPos()
@@ -125,25 +144,20 @@ function ENT:Think()
 			if math.random() < 0.01 then
 				-- start moving
 				local id = math.random(0, 5)
-				local dir = directions[id]
-				local canMove = false
+				local dir = self.directions[id]
 
 				for _ = 1,6,1 do
-					if self:CheckBoundaries(cube.movementState.internalPos + dir) then
-						id = (id + 1) % 6
-						dir = directions[id]
-					else
-						canMove = true
+					if self:CanMove(cube, id) then
+						-- start moving
+						cube.movementState.isMoving = true
+						cube.movementState.target = cube:GetPos() + dir * cubeSize
+						cube.movementState.targetPos = cube.movementState.targetPos + dir
+						phys:SetVelocity((cube.movementState.target - cube:GetPos()):GetNormalized() * cubeSize * MOVEMENT_SPEED_COEFFICIENT)
 						break
 					end
-				end
-
-				if canMove then
-
-					cube.movementState.isMoving = true
-					cube.movementState.target = cube:GetPos() + dir * cubeSize
-					cube.movementState.targetPos = cube.movementState.targetPos + dir
-					phys:SetVelocity((cube.movementState.target - cube:GetPos()):GetNormalized() * cubeSize * MOVEMENT_SPEED_COEFFICIENT)
+					-- try different direction
+					id = (id + 1) % 6
+					dir = self.directions[id]
 				end
 			end
 		else
