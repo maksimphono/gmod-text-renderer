@@ -19,7 +19,7 @@ CUBE_PARAMETERS = {
 DEFAULT_CUBE_NAME = "__cube__"
 DEFAULT_CUBE_SPACE_NAME = "__cube_space__"
 
-MOVEMENT_SPEED_COEFFICIENT = 3
+MOVEMENT_SPEED_COEFFICIENT = 2
 
 AddCSLuaFile()
 
@@ -79,9 +79,9 @@ function ENT:Initialize()
 		}
 
 		-- remove me
-		cubeSize = CUBE_PARAMETERS["16"].size
-		cubeModel = CUBE_PARAMETERS["16"].model
-		dimension = 4
+		cubeSize = CUBE_PARAMETERS["24"].size
+		cubeModel = CUBE_PARAMETERS["24"].model
+		dimension = 16
 
 		self:SetNoDraw(true)
 		self:DrawShadow(false)
@@ -130,18 +130,21 @@ function ENT:CanMove(cube, id)
 		[4] = function(targetPos) return targetPos.y >= 1 end,
 		[5] = function(targetPos) return targetPos.z >= 1 end
 	}
+	print(cube.movementState.internalPos)
 
-	return switch[id](cube.internalPos + self.directions[id])
+	return switch[id](cube.movementState.internalPos + self.directions[id])
 end
 
 function ENT:Think()
+
+	if SERVER then
 
 	for i, cube in ipairs(self.cubes) do
 		local pos = cube:GetPos()
 		local phys = cube:GetPhysicsObject()
 
 		if not cube.movementState.isMoving then
-			if math.random() < 0.01 then
+			if math.random() < 0.00025 then
 				-- start moving
 				local id = math.random(0, 5)
 				local dir = self.directions[id]
@@ -152,7 +155,11 @@ function ENT:Think()
 						cube.movementState.isMoving = true
 						cube.movementState.target = cube:GetPos() + dir * cubeSize
 						cube.movementState.targetPos = cube.movementState.targetPos + dir
+
+						phys:EnableMotion(true)
 						phys:SetVelocity((cube.movementState.target - cube:GetPos()):GetNormalized() * cubeSize * MOVEMENT_SPEED_COEFFICIENT)
+						phys:Wake()
+
 						break
 					end
 					-- try different direction
@@ -168,6 +175,7 @@ function ENT:Think()
 				cube.movementState.internalPos = cube.movementState.targetPos
 				cube:SetPos(cube.movementState.target)
 				phys:SetPos(cube.movementState.target)
+				phys:EnableMotion(false)
 			else
 				-- not arived yet, keep going
 				phys:SetVelocity((cube.movementState.target - cube:GetPos()):GetNormalized() * cubeSize * MOVEMENT_SPEED_COEFFICIENT)
@@ -177,6 +185,8 @@ function ENT:Think()
 
 		--cube:SetAngles(phys:GetAngles())
 		print(pos)
+
+	end
 
 	end
 	
