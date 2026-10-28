@@ -81,11 +81,15 @@ function ENT:Initialize()
 		}
 
 		self.vacantMatrix = {} -- matrix of boolean values, representing which position in the cube space are vacant
+		
+
 
 		-- parameters
 		cubeSize = CUBE_PARAMETERS["24"].size
 		cubeModel = CUBE_PARAMETERS["24"].model
 		dimension = 16
+
+		self.movementChance = 1 / math.pow(dimension, 3)
 
 		self:SetNoDraw(true)
 		self:DrawShadow(false)
@@ -99,18 +103,18 @@ end
 
 function ENT:FillSpace(startPos, size, density)
 	self.cubes = {}
+	self.vacantMatrix = {}
+
 	for i = 1,size,1 do
-		table.insert(self.vacantMatrix, 1, {})
+		self.vacantMatrix[i] = {}
 		for j = 1,size,1 do
-			table.insert(self.vacantMatrix[i], 1, {})
+			self.vacantMatrix[i][j] = {}
 			for k = 1,size,1 do
-				table.insert(self.vacantMatrix[i][j], 1, {})
+				self.vacantMatrix[i][j][k] = true
 
 				if math.random() < density then
 					table.insert(self.cubes, 1, __spawnCube(startPos + Vector(i * cubeSize, j * cubeSize, k * cubeSize), Vector(i, j, k)))
 					self.vacantMatrix[i][j][k] = false
-				else
-					self.vacantMatrix[i][j][k] = true
 				end
 			end
 		end
@@ -133,7 +137,6 @@ function ENT:CanMove(cube, id)
 		[4] = function(targetPos) return targetPos.y >= 1 end,
 		[5] = function(targetPos) return targetPos.z >= 1 end
 	}
-	--print(cube.movementState.internalPos)
 	local newPos = cube.movementState.internalPos + self.directions[id]
 
 	return (switch[id](newPos) and self.vacantMatrix[newPos.x][newPos.y][newPos.z])
@@ -148,7 +151,7 @@ function ENT:Think()
 		local phys = cube:GetPhysicsObject()
 
 		if not cube.movementState.isMoving then
-			if math.random() < 1 / math.pow(dimension, 3) then
+			if math.random() < self.movementChance then
 				-- start moving
 				local id = math.random(0, 5)
 				local dir = self.directions[id]
@@ -185,6 +188,7 @@ function ENT:Think()
 				cube:SetPos(cube.movementState.target)
 				phys:SetPos(cube.movementState.target)
 				phys:EnableMotion(false)
+				phys:Sleep()
 			else
 				-- not arived yet, keep going
 				phys:SetVelocity((cube.movementState.target - cube:GetPos()):GetNormalized() * cubeSize * MOVEMENT_SPEED_COEFFICIENT)
@@ -193,7 +197,7 @@ function ENT:Think()
 		end
 
 		--cube:SetAngles(phys:GetAngles())
-		print(pos)
+		--print(pos)
 
 	end
 
