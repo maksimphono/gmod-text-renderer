@@ -42,7 +42,7 @@ ENT.Spawnable = true
 ENT.Category = "Other"
 
 
-function __spawnCube(pos, internalPos)
+local function spawnCube(pos, internalPos)
 	local cube = ents.Create("movepush_cube_entity")
 
 	cube.SpawnArgument = {}
@@ -113,7 +113,7 @@ function ENT:FillSpace(startPos, size, density)
 				self.vacantMatrix[i][j][k] = true
 
 				if math.random() < density then
-					table.insert(self.cubes, 1, __spawnCube(startPos + Vector(i * cubeSize, j * cubeSize, k * cubeSize), Vector(i, j, k)))
+					table.insert(self.cubes, 1, spawnCube(startPos + Vector(i * cubeSize, j * cubeSize, k * cubeSize), Vector(i, j, k)))
 					self.vacantMatrix[i][j][k] = false
 				end
 			end
