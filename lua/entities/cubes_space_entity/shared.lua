@@ -80,6 +80,8 @@ function ENT:Initialize()
 			[5] = Vector(0, 0, -1)
 		}
 
+		self.vacantMatrix = {} -- matrix of boolean values, representing which position in the cube space are vacant
+
 		-- parameters
 		cubeSize = CUBE_PARAMETERS["24"].size
 		cubeModel = CUBE_PARAMETERS["24"].model
@@ -98,10 +100,17 @@ end
 function ENT:FillSpace(startPos, size, density)
 	self.cubes = {}
 	for i = 1,size,1 do
+		table.insert(self.vacantMatrix, 1, {})
 		for j = 1,size,1 do
+			table.insert(self.vacantMatrix[i], 1, {})
 			for k = 1,size,1 do
+				table.insert(self.vacantMatrix[i][j], 1, {})
+
 				if math.random() < density then
 					table.insert(self.cubes, 1, __spawnCube(startPos + Vector(i * cubeSize, j * cubeSize, k * cubeSize), Vector(i, j, k)))
+					self.vacantMatrix[i][j][k] = false
+				else
+					self.vacantMatrix[i][j][k] = true
 				end
 			end
 		end
@@ -116,14 +125,6 @@ function ENT:FillSpace(startPos, size, density)
 end
 
 function ENT:CanMove(cube, id)
-	-- returns true if a cube can move
-	--local switchLut = {
-	--	[1] = function() return targetPos.x >= dimension end
-	--	[1] = function() return targetPos.x >= dimension end
-	--}
-	--print("Checking boundaries for ", targetPos, targetPos.x >= dimension or targetPos.x < 1 or targetPos.y >= dimension or targetPos.y < 1 or targetPos.z >= dimension or targetPos.z < 1)
-	--return false
-
 	local switch = {
 		[0] = function(targetPos) return targetPos.x < dimension end,
 		[1] = function(targetPos) return targetPos.y < dimension end,
@@ -132,9 +133,10 @@ function ENT:CanMove(cube, id)
 		[4] = function(targetPos) return targetPos.y >= 1 end,
 		[5] = function(targetPos) return targetPos.z >= 1 end
 	}
-	print(cube.movementState.internalPos)
+	--print(cube.movementState.internalPos)
+	local newPos = cube.movementState.internalPos + self.directions[id]
 
-	return switch[id](cube.movementState.internalPos + self.directions[id])
+	return (switch[id](newPos) and self.vacantMatrix[newPos.x][newPos.y][newPos.z])
 end
 
 function ENT:Think()
@@ -162,6 +164,9 @@ function ENT:Think()
 						phys:SetVelocity((cube.movementState.target - cube:GetPos()):GetNormalized() * cubeSize * MOVEMENT_SPEED_COEFFICIENT)
 						phys:Wake()
 
+						-- locks target space so it won't be taken
+						self.vacantMatrix[cube.movementState.targetPos.x][cube.movementState.targetPos.y][cube.movementState.targetPos.z] = false
+
 						break
 					end
 					-- try different direction
@@ -173,6 +178,8 @@ function ENT:Think()
 			-- moving already
 			if cube:GetPos():Distance(cube.movementState.target) < 0.05 * cubeSize then
 				-- arrived
+				self.vacantMatrix[cube.movementState.internalPos.x][cube.movementState.internalPos.y][cube.movementState.internalPos.z] = true
+
 				cube.movementState.isMoving = false
 				cube.movementState.internalPos = cube.movementState.targetPos
 				cube:SetPos(cube.movementState.target)
