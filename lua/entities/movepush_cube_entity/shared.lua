@@ -31,6 +31,9 @@ function ENT:Initialize()
 
 		self:SetPos(self.SpawnArgument.pos)
 		self:SetModel(self.SpawnArgument.model)
+		if self.SpawnArgument.material then self:SetMaterial(self.SpawnArgument.material) end
+
+		self:SetColor(Color(math.random(100, 255), math.random(100, 255), math.random(100, 255)))
 
 		self:SetName(DEFAULT_CUBE_NAME)
 
@@ -38,7 +41,7 @@ function ENT:Initialize()
 		self.movementState.target = self.SpawnArgument.pos
 		self.movementState.isMoving = false
 		self.movementState.internalPos = self.SpawnArgument.internalPos
-		cube.movementState.targetPos = self.movementState.internalPos
+		self.movementState.targetPos = self.SpawnArgument.internalPos
 
 	end
 
@@ -49,7 +52,7 @@ function ENT:Initialize()
 	self:SetAngles(Angle(0,0,0))
 	local phys = self:GetPhysicsObject()
 	phys:SetMass(9999)
-	phys:EnableMotion(true)
+	phys:EnableMotion(false)
 	phys:EnableGravity(false)
 	phys:Wake()
 end

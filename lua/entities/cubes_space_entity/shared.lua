@@ -3,7 +3,8 @@ local sin = math.sin
 
 cubeSize = 11.85
 cubeModel = "models/hunter/blocks/cube025x025x025.mdl"
-dimension = 8
+dimension = 16
+material = "models/debug/debugwhite"
 
 CUBE_PARAMETERS = {
 	["1"] = { ["size"] = cubeSize, ["model"] = "models/hunter/blocks/cube025x025x025.mdl" },
@@ -48,6 +49,7 @@ function __spawnCube(pos, internalPos)
 	cube.SpawnArgument.pos = pos
 	cube.SpawnArgument.model = cubeModel
 	cube.SpawnArgument.internalPos = internalPos
+	cube.SpawnArgument.material = material
 
 	cube:Spawn()
 
@@ -81,7 +83,7 @@ function ENT:Initialize()
 		-- parameters
 		cubeSize = CUBE_PARAMETERS["24"].size
 		cubeModel = CUBE_PARAMETERS["24"].model
-		dimension = 8
+		dimension = 16
 
 		self:SetNoDraw(true)
 		self:DrawShadow(false)
