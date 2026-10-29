@@ -38,25 +38,24 @@ ENT.Autho	= "maksimphono"
 
 ENT.Spawnable = true
 
--- The category the entity is located in within the spawnmenu.
 ENT.Category = "Other"
 
 
-function __spawnCube(pos, internalPos)
+local function spawnCube(pos, internalPos)
 	local cube = ents.Create("movepush_cube_entity")
 
-	cube.SpawnArgument = {}
-	cube.SpawnArgument.pos = pos
-	cube.SpawnArgument.model = cubeModel
-	cube.SpawnArgument.internalPos = internalPos
-	cube.SpawnArgument.material = material
+	cube.SpawnArgument = {
+		["pos"] 	= pos,
+		["model"] 	= cubeModel,
+		["internalPos"] = internalPos,
+		["material"] 	= material
+	}
 
 	cube:Spawn()
 
 	return cube
 end
 
--- This code runs whenever the entity is created.
 function ENT:Initialize()
 	self.cubes = {}
 
@@ -82,7 +81,6 @@ function ENT:Initialize()
 
 		self.vacantMatrix = {} -- matrix of boolean values, representing which position in the cube space are vacant
 		
-
 
 		-- parameters
 		cubeSize = CUBE_PARAMETERS["24"].size
@@ -113,7 +111,7 @@ function ENT:FillSpace(startPos, size, density)
 				self.vacantMatrix[i][j][k] = true
 
 				if math.random() < density then
-					table.insert(self.cubes, 1, __spawnCube(startPos + Vector(i * cubeSize, j * cubeSize, k * cubeSize), Vector(i, j, k)))
+					table.insert(self.cubes, 1, spawnCube(startPos + Vector(i * cubeSize, j * cubeSize, k * cubeSize), Vector(i, j, k)))
 					self.vacantMatrix[i][j][k] = false
 				end
 			end
@@ -144,7 +142,10 @@ end
 
 function ENT:Think()
 
-	if SERVER then
+	if not SERVER then
+		self:NextThink(CurTime())
+    		return true
+	end
 
 	for i, cube in ipairs(self.cubes) do
 		local pos = cube:GetPos()
@@ -197,14 +198,11 @@ function ENT:Think()
 		end
 
 		--cube:SetAngles(phys:GetAngles())
-		--print(pos)
-
-	end
 
 	end
 	
 	self:NextThink(CurTime())
-    return true
+	return true
 end
 
 function ENT:OnRemove()
